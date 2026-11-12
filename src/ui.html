@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skew Tool</title>
+    <style>
+      :root { color: #242424; font-family: Inter, "PingFang SC", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0 16px 14px; }
+      .preview { align-items: center; display: flex; height: 122px; justify-content: center; overflow: hidden; position: relative; }
+      .preview::before { background: #f1f1f1; content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; }
+      .preview::after { background: #f1f1f1; bottom: 0; content: ""; left: 50%; position: absolute; top: 0; width: 1px; }
+      .shape { align-items: center; background: #0eea91; border: 2px solid #4a4a4a; display: flex; height: 58px; justify-content: center; position: relative; transition: transform 120ms ease-out; width: 58px; z-index: 1; }
+      .shape::before, .shape::after { background: #4a4a4a; content: ""; height: 2px; position: absolute; width: 16px; }
+      .shape::after { transform: rotate(90deg); }
+      .control { margin-top: 12px; }
+      .control:first-of-type { margin-top: 0; }
+      .control-top { align-items: center; display: flex; gap: 6px; justify-content: space-between; margin-bottom: 4px; }
+      label { color: #777; font-size: 12px; font-weight: 500; }
+      .icon { display: block; height: 12px; width: 12px; }
+      .control-name { align-items: center; display: flex; flex: 1; gap: 8px; }
+      .number { appearance: textfield; background: transparent; border: 0; border-bottom: 1px solid transparent; color: #777; font: 500 12px Inter, sans-serif; padding: 1px 0; text-align: right; width: 40px; }
+      .number:focus { border-bottom: 1.5px solid #000; outline: 0; }
+      .number::-webkit-inner-spin-button, .number::-webkit-outer-spin-button { appearance: none; margin: 0; }
+      .degree { color: #777; font-size: 12px; margin-left: -4px; }
+      input[type="range"] { appearance: none; background: transparent; display: block; height: 12px; margin: 0; width: 100%; }
+      input[type="range"]::-webkit-slider-runnable-track { background: #d5d5d9; border-radius: 999px; height: 3px; }
+      input[type="range"]::-webkit-slider-thumb { appearance: none; background: #292929; border: 0; border-radius: 50%; height: 12px; margin-top: -4.5px; width: 12px; }
+      .actions { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: 22px; }
+      button { border-radius: 8px; cursor: pointer; font: 600 12px Inter, sans-serif; height: 36px; }
+      .reset { background: #fff; border: 1.5px solid #333; color: #333; }
+      .apply { background: #18a0fb; border: 2px solid #18a0fb; color: #fff; }
+      .apply:hover { background: #0d8de3; border-color: #0d8de3; }
+      .undo { background: transparent; border: 0; color: #777; font-size: 10px; height: auto; margin-top: 16px; text-decoration: none; width: 100%; }
+      #status { display: none; font-size: 10px; margin: 8px 0 0; text-align: center; }
+      #status.error { color: #d92d20; display: block; }
+    </style>
+  </head>
+  <body>
+    <div class="preview" aria-label="斜切效果预览">
+      <div id="preview-shape" class="shape"></div>
+    </div>
+    <div class="control">
+      <div class="control-top">
+        <div class="control-name"><svg class="icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="5" width="10" height="2" fill="#A4A4A4"/><path d="M8 1H11V3H6L8 1Z" fill="#A4A4A4"/><path d="M4 11L1 11L1 9L6 9L4 11Z" fill="#A4A4A4"/></svg><label for="horizontal-angle">Horizontal Skew</label></div>
+        <input id="horizontal-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="水平斜切角度" />
+        <span class="degree">°</span>
+      </div>
+      <input id="horizontal-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="水平斜切滑杆" />
+    </div>
+    <div class="control">
+      <div class="control-top">
+        <div class="control-name"><svg class="icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="7" y="1" width="10" height="2" transform="rotate(90 7 1)" fill="#A4A4A4"/><path d="M11 8L11 11L9 11L9 6L11 8Z" fill="#A4A4A4"/><path d="M1 4L1 1L3 1L3 6L1 4Z" fill="#A4A4A4"/></svg><label for="vertical-angle">Vertical Skew</label></div>
+        <input id="vertical-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="垂直斜切角度" />
+        <span class="degree">°</span>
+      </div>
+      <input id="vertical-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="垂直斜切滑杆" />
+    </div>
+    <div class="actions">
+      <button id="reset" class="reset" type="button">Reset</button>
+      <button id="apply" class="apply" type="button">Apply</button>
+    </div>
+    <button id="undo" class="undo" type="button">撤销上一步</button>
+    <div id="status" role="status"></div>
+    <script>
+      const horizontalAngleInput = document.getElementById("horizontal-angle");
+      const verticalAngleInput = document.getElementById("vertical-angle");
+      const horizontalSlider = document.getElementById("horizontal-slider");
+      const verticalSlider = document.getElementById("vertical-slider");
+      const previewShape = document.getElementById("preview-shape");
+      const status = document.getElementById("status");
+
+      function clamp(value) {
+        return Math.max(-60, Math.min(60, Number.isFinite(value) ? value : 0));
+      }
+
+      function updatePreview() {
+        const horizontalRadians = (Number(horizontalSlider.value) * Math.PI) / 180;
+        const verticalRadians = (Number(verticalSlider.value) * Math.PI) / 180;
+        const shapeSize = 58;
+        const availableWidth = 192;
+        const availableHeight = 106;
+        const skewedWidth = shapeSize + Math.abs(Math.tan(horizontalRadians)) * shapeSize;
+        const skewedHeight = shapeSize + Math.abs(Math.tan(verticalRadians)) * shapeSize;
+        const previewScale = Math.min(1, availableWidth / skewedWidth, availableHeight / skewedHeight);
+
+        previewShape.style.transform = `scale(${previewScale}) skew(${horizontalSlider.value}deg, ${verticalSlider.value}deg)`;
+      }
+
+      function syncControls(input, slider, value, shouldPreview = true) {
+        const normalizedValue = clamp(Number(value));
+        input.value = normalizedValue;
+        slider.value = normalizedValue;
+        updatePreview();
+        if (!shouldPreview) return;
+        parent.postMessage({
+          pluginMessage: {
+            type: "preview-skew",
+            horizontalAngle: horizontalAngleInput.value,
+            verticalAngle: verticalAngleInput.value,
+          },
+        }, "*");
+      }
+
+      horizontalSlider.oninput = () => syncControls(horizontalAngleInput, horizontalSlider, horizontalSlider.value);
+      verticalSlider.oninput = () => syncControls(verticalAngleInput, verticalSlider, verticalSlider.value);
+      horizontalAngleInput.oninput = () => syncControls(horizontalAngleInput, horizontalSlider, horizontalAngleInput.value);
+      verticalAngleInput.oninput = () => syncControls(verticalAngleInput, verticalSlider, verticalAngleInput.value);
+
+      document.getElementById("apply").onclick = () => {
+        parent.postMessage({
+          pluginMessage: {
+            type: "apply-skew",
+            horizontalAngle: horizontalAngleInput.value,
+            verticalAngle: verticalAngleInput.value,
+          },
+        }, "*");
+      };
+
+      document.getElementById("undo").onclick = () => {
+        parent.postMessage({ pluginMessage: { type: "undo" } }, "*");
+      };
+
+      document.getElementById("reset").onclick = () => {
+        syncControls(horizontalAngleInput, horizontalSlider, 0, false);
+        syncControls(verticalAngleInput, verticalSlider, 0, false);
+        parent.postMessage({ pluginMessage: { type: "reset" } }, "*");
+      };
+
+      window.onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        if (!message) return;
+        if (message.type === "clear-status") {
+          status.textContent = "";
+          status.className = "";
+          return;
+        }
+        status.textContent = message.message;
+        status.className = message.type;
+      };
+    </script>
+  </body>
+</html>

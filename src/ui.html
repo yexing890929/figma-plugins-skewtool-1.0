@@ -7,7 +7,7 @@
     <style>
       :root { color: #242424; font-family: Inter, "PingFang SC", sans-serif; }
       * { box-sizing: border-box; }
-      body { margin: 0; padding: 0 16px 14px; }
+      body { margin: 0; padding: 0 16px 12px; }
       .preview { align-items: center; display: flex; height: 122px; justify-content: center; overflow: hidden; position: relative; }
       .preview::before { background: #f1f1f1; content: ""; height: 1px; left: 0; position: absolute; right: 0; top: 50%; }
       .preview::after { background: #f1f1f1; bottom: 0; content: ""; left: 50%; position: absolute; top: 0; width: 1px; }
@@ -40,7 +40,7 @@
       .preset-toggle svg { height: 12px; transition: transform 160ms ease; width: 12px; }
       .preset-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
       .preset-toggle:focus-visible { outline: 1px solid #000; outline-offset: 2px; }
-      .axis-presets { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; box-shadow: 0 4px 12px #0002; display: none; gap: 4px; grid-template-columns: repeat(3, 1fr); padding: 6px; position: absolute; right: 0; top: 24px; width: 148px; z-index: 10; }
+      .axis-presets { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; box-shadow: 0 4px 12px #0002; display: none; gap: 4px; grid-template-columns: repeat(3, 1fr); padding: 6px; position: absolute; right: 0; top: 24px; width: 100%; z-index: 10; }
       .control.is-open .axis-presets { display: grid; }
       .axis-preset-button { background: #fff; border: 1px solid #d5d5d9; border-radius: 4px; color: #777; font-size: 10px; height: 24px; padding: 0; }
       .axis-preset-button:hover { border-color: #777; color: #242424; }
@@ -50,7 +50,7 @@
       .reset { background: #fff; border: 1.5px solid #333; color: #333; }
       .apply { background: #18a0fb; border: 2px solid #18a0fb; color: #fff; }
       .apply:hover { background: #0d8de3; border-color: #0d8de3; }
-      .undo { background: transparent; border: 0; color: #777; font-size: 10px; height: auto; margin-top: 16px; text-decoration: none; width: 100%; }
+      .undo { background: transparent; border: 0; color: #777; font-size: 10px; height: auto; margin-top: 12px; text-decoration: none; width: 100%; }
     </style>
   </head>
   <body>

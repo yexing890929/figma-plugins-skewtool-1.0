@@ -15,7 +15,8 @@
       .shape::before, .shape::after { background: #4a4a4a; content: ""; height: 2px; position: absolute; width: 16px; }
       .shape::after { transform: rotate(90deg); }
       .anchor-control { align-items: center; display: flex; justify-content: space-between; margin: 7px 0 5px; }
-      .anchor-label { color: #777; font-size: 11px; font-weight: 500; }
+      .anchor-label { align-items: center; color: #777; display: flex; font-size: 11px; font-weight: 500; gap: 8px; }
+      .anchor-icon { display: block; height: 12px; width: 12px; }
       .anchor-grid { display: grid; gap: 3px; grid-template-columns: repeat(3, 14px); }
       .anchor-button { background: #fff; border: 1px solid #c9c9c9; border-radius: 2px; height: 14px; padding: 0; width: 14px; }
       .anchor-button:hover { border-color: #777; }
@@ -48,7 +49,7 @@
       <div id="preview-shape" class="shape"></div>
     </div>
     <div class="anchor-control" role="radiogroup" aria-label="斜切锚点">
-      <span class="anchor-label">Anchor</span>
+      <span class="anchor-label"><svg class="anchor-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="9" width="2" height="2" fill="#A4A4A4"/></svg>Anchor</span>
       <div class="anchor-grid">
         <button class="anchor-button" type="button" data-anchor="top-left" role="radio" aria-label="左上锚点" aria-checked="false"></button>
         <button class="anchor-button" type="button" data-anchor="top-center" role="radio" aria-label="上中锚点" aria-checked="false"></button>

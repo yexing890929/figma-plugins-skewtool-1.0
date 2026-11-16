@@ -1,7 +1,7 @@
 const MAX_ANGLE = 60;
 const EPSILON = 0.0001;
 
-figma.showUI(__html__, { width: 240, height: 386, title: "Skew Tool" });
+figma.showUI(__html__, { width: 240, height: 432, title: "Skew Tool" });
 
 const initialTransforms = new Map();
 const previewOrigins = new Map();

@@ -21,12 +21,6 @@
       .anchor-button { background: #fff; border: 1px solid #c9c9c9; border-radius: 2px; height: 14px; padding: 0; width: 14px; }
       .anchor-button:hover { border-color: #777; }
       .anchor-button[aria-checked="true"] { background: #242424; border-color: #242424; }
-      .preset-section { margin: 8px 0 2px; }
-      .preset-title { color: #777; display: block; font-size: 11px; font-weight: 500; margin-bottom: 5px; }
-      .preset-list { display: grid; gap: 4px; grid-template-columns: repeat(4, 1fr); }
-      .preset-button { background: #fff; border: 1px solid #d5d5d9; border-radius: 4px; color: #777; font-size: 9px; height: 24px; padding: 0; }
-      .preset-button:hover { border-color: #777; color: #242424; }
-      .preset-button.is-active { background: #242424; border-color: #242424; color: #fff; }
       .control { margin-top: 12px; }
       .control:first-of-type { margin-top: 0; }
       .control-top { align-items: center; display: flex; gap: 6px; justify-content: space-between; margin-bottom: 4px; }
@@ -40,6 +34,10 @@
       input[type="range"] { appearance: none; background: transparent; display: block; height: 12px; margin: 0; width: 100%; }
       input[type="range"]::-webkit-slider-runnable-track { background: #d5d5d9; border-radius: 999px; height: 3px; }
       input[type="range"]::-webkit-slider-thumb { appearance: none; background: #292929; border: 0; border-radius: 50%; height: 12px; margin-top: -4.5px; width: 12px; }
+      .axis-presets { display: grid; gap: 4px; grid-template-columns: repeat(4, 1fr); margin-top: 4px; }
+      .axis-preset-button { background: #fff; border: 1px solid #d5d5d9; border-radius: 4px; color: #777; font-size: 9px; height: 20px; padding: 0; }
+      .axis-preset-button:hover { border-color: #777; color: #242424; }
+      .axis-preset-button.is-active { background: #242424; border-color: #242424; color: #fff; }
       .actions { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: 22px; }
       button { border-radius: 8px; cursor: pointer; font: 600 12px Inter, sans-serif; height: 36px; }
       .reset { background: #fff; border: 1.5px solid #333; color: #333; }
@@ -68,15 +66,6 @@
         <button class="anchor-button" type="button" data-anchor="bottom-right" role="radio" aria-label="右下锚点" aria-checked="false"></button>
       </div>
     </div>
-    <div class="preset-section" aria-label="斜切预设">
-      <span class="preset-title">Presets</span>
-      <div class="preset-list">
-        <button class="preset-button" type="button" data-horizontal="-30" data-vertical="0">H −30°</button>
-        <button class="preset-button" type="button" data-horizontal="30" data-vertical="0">H +30°</button>
-        <button class="preset-button" type="button" data-horizontal="0" data-vertical="-30">V −30°</button>
-        <button class="preset-button" type="button" data-horizontal="0" data-vertical="30">V +30°</button>
-      </div>
-    </div>
     <div class="control">
       <div class="control-top">
         <div class="control-name"><svg class="icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="5" width="10" height="2" fill="#A4A4A4"/><path d="M8 1H11V3H6L8 1Z" fill="#A4A4A4"/><path d="M4 11L1 11L1 9L6 9L4 11Z" fill="#A4A4A4"/></svg><label for="horizontal-angle">Horizontal Skew</label></div>
@@ -84,6 +73,12 @@
         <span class="degree">°</span>
       </div>
       <input id="horizontal-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="水平斜切滑杆" />
+      <div class="axis-presets" aria-label="水平斜切预设">
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-45">−45°</button>
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-30">−30°</button>
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="30">+30°</button>
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="45">+45°</button>
+      </div>
     </div>
     <div class="control">
       <div class="control-top">
@@ -92,6 +87,12 @@
         <span class="degree">°</span>
       </div>
       <input id="vertical-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="垂直斜切滑杆" />
+      <div class="axis-presets" aria-label="垂直斜切预设">
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-45">−45°</button>
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-30">−30°</button>
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="30">+30°</button>
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="45">+45°</button>
+      </div>
     </div>
     <div class="actions">
       <button id="reset" class="reset" type="button">Reset</button>
@@ -107,7 +108,7 @@
       const previewShape = document.getElementById("preview-shape");
       const status = document.getElementById("status");
       const anchorButtons = Array.from(document.querySelectorAll(".anchor-button"));
-      const presetButtons = Array.from(document.querySelectorAll(".preset-button"));
+      const presetButtons = Array.from(document.querySelectorAll(".axis-preset-button"));
       const anchorOrigins = {
         "top-left": "0% 0%",
         "top-center": "50% 0%",
@@ -154,9 +155,8 @@
         const horizontalAngle = Number(horizontalAngleInput.value);
         const verticalAngle = Number(verticalAngleInput.value);
         presetButtons.forEach((button) => {
-          const isActive =
-            horizontalAngle === Number(button.dataset.horizontal) &&
-            verticalAngle === Number(button.dataset.vertical);
+          const axisValue = button.dataset.axis === "horizontal" ? horizontalAngle : verticalAngle;
+          const isActive = axisValue === Number(button.dataset.value);
           button.classList.toggle("is-active", isActive);
         });
       }
@@ -180,9 +180,12 @@
         sendPreview();
       }
 
-      function applyPreset(horizontalAngle, verticalAngle) {
-        syncControls(horizontalAngleInput, horizontalSlider, horizontalAngle, false);
-        syncControls(verticalAngleInput, verticalSlider, verticalAngle, false);
+      function applyPreset(axis, value) {
+        if (axis === "horizontal") {
+          syncControls(horizontalAngleInput, horizontalSlider, value, false);
+        } else {
+          syncControls(verticalAngleInput, verticalSlider, value, false);
+        }
         sendPreview();
       }
 
@@ -194,7 +197,7 @@
         button.onclick = () => selectAnchor(button.dataset.anchor);
       });
       presetButtons.forEach((button) => {
-        button.onclick = () => applyPreset(button.dataset.horizontal, button.dataset.vertical);
+        button.onclick = () => applyPreset(button.dataset.axis, button.dataset.value);
       });
 
       document.getElementById("apply").onclick = () => {

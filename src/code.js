@@ -1,11 +1,22 @@
 const MAX_ANGLE = 60;
 const EPSILON = 0.0001;
 
-figma.showUI(__html__, { width: 240, height: 332, title: "Skew Tool" });
+figma.showUI(__html__, { width: 240, height: 386, title: "Skew Tool" });
 
 const initialTransforms = new Map();
 const previewOrigins = new Map();
 const history = [];
+const ANCHORS = {
+  "top-left": { x: 0, y: 0 },
+  "top-center": { x: 0.5, y: 0 },
+  "top-right": { x: 1, y: 0 },
+  "center-left": { x: 0, y: 0.5 },
+  center: { x: 0.5, y: 0.5 },
+  "center-right": { x: 1, y: 0.5 },
+  "bottom-left": { x: 0, y: 1 },
+  "bottom-center": { x: 0.5, y: 1 },
+  "bottom-right": { x: 1, y: 1 },
+};
 
 function isSupported(node) {
   return "relativeTransform" in node && "width" in node && "height" in node;
@@ -41,14 +52,19 @@ function createSkewTransform(horizontalAngle, verticalAngle) {
   ];
 }
 
-function transformAroundCenter(node, transform, horizontalAngle, verticalAngle) {
+function transformAroundAnchor(node, transform, horizontalAngle, verticalAngle, anchor) {
   const localTransform = createSkewTransform(horizontalAngle, verticalAngle);
-  const halfWidth = node.width / 2;
-  const halfHeight = node.height / 2;
+  const anchorPoint = ANCHORS[anchor];
+  if (!anchorPoint) {
+    throw new Error("请选择有效的斜切锚点。");
+  }
+
+  const anchorX = node.width * anchorPoint.x;
+  const anchorY = node.height * anchorPoint.y;
   const localOffsetX =
-    halfWidth - localTransform[0][0] * halfWidth - localTransform[0][1] * halfHeight;
+    anchorX - localTransform[0][0] * anchorX - localTransform[0][1] * anchorY;
   const localOffsetY =
-    halfHeight - localTransform[1][0] * halfWidth - localTransform[1][1] * halfHeight;
+    anchorY - localTransform[1][0] * anchorX - localTransform[1][1] * anchorY;
 
   const a = transform[0][0];
   const b = transform[0][1];
@@ -114,14 +130,14 @@ function ensureInitialTransforms(nodes) {
   });
 }
 
-function setSkew(nodes, horizontalAngle, verticalAngle) {
+function setSkew(nodes, horizontalAngle, verticalAngle, anchor) {
   nodes.forEach((node) => {
     const initialTransform = initialTransforms.get(node.id).transform;
-    node.relativeTransform = transformAroundCenter(node, initialTransform, horizontalAngle, verticalAngle);
+    node.relativeTransform = transformAroundAnchor(node, initialTransform, horizontalAngle, verticalAngle, anchor);
   });
 }
 
-function previewSkew(horizontalAngle, verticalAngle) {
+function previewSkew(horizontalAngle, verticalAngle, anchor) {
   const nodes = getEligibleSelection();
   ensureInitialTransforms(nodes);
   nodes.forEach((node) => {
@@ -129,10 +145,10 @@ function previewSkew(horizontalAngle, verticalAngle) {
       previewOrigins.set(node.id, { node, transform: cloneTransform(node.relativeTransform) });
     }
   });
-  setSkew(nodes, horizontalAngle, verticalAngle);
+  setSkew(nodes, horizontalAngle, verticalAngle, anchor);
 }
 
-function applySkew(horizontalAngle, verticalAngle) {
+function applySkew(horizontalAngle, verticalAngle, anchor) {
   const nodes = getEligibleSelection();
   ensureInitialTransforms(nodes);
   const previousTransforms = nodes.map((node) => {
@@ -140,7 +156,7 @@ function applySkew(horizontalAngle, verticalAngle) {
     return previewOrigin || { node, transform: cloneTransform(node.relativeTransform) };
   });
 
-  setSkew(nodes, horizontalAngle, verticalAngle);
+  setSkew(nodes, horizontalAngle, verticalAngle, anchor);
 
   history.push(previousTransforms);
   nodes.forEach((node) => previewOrigins.delete(node.id));
@@ -200,6 +216,7 @@ figma.ui.onmessage = (message) => {
     if (message.type === "preview-skew" || message.type === "apply-skew") {
       const horizontalAngle = Number(message.horizontalAngle);
       const verticalAngle = Number(message.verticalAngle);
+      const anchor = message.anchor;
 
       if (
         !Number.isFinite(horizontalAngle) ||
@@ -210,8 +227,8 @@ figma.ui.onmessage = (message) => {
         throw new Error(`请输入 ${-MAX_ANGLE}° 到 ${MAX_ANGLE}° 之间的数值。`);
       }
 
-      if (message.type === "preview-skew") previewSkew(horizontalAngle, verticalAngle);
-      if (message.type === "apply-skew") applySkew(horizontalAngle, verticalAngle);
+      if (message.type === "preview-skew") previewSkew(horizontalAngle, verticalAngle, anchor);
+      if (message.type === "apply-skew") applySkew(horizontalAngle, verticalAngle, anchor);
     }
     if (message.type === "undo") undoLastApply();
     if (message.type === "reset") resetSession();

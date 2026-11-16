@@ -14,6 +14,13 @@
       .shape { align-items: center; background: #0eea91; border: 2px solid #4a4a4a; display: flex; height: 58px; justify-content: center; position: relative; transition: transform 120ms ease-out; width: 58px; z-index: 1; }
       .shape::before, .shape::after { background: #4a4a4a; content: ""; height: 2px; position: absolute; width: 16px; }
       .shape::after { transform: rotate(90deg); }
+      .anchor-control { align-items: center; display: flex; justify-content: space-between; margin: 7px 0 5px; }
+      .anchor-label { align-items: center; color: #777; display: flex; font-size: 11px; font-weight: 500; gap: 8px; }
+      .anchor-icon { display: block; height: 12px; width: 12px; }
+      .anchor-grid { display: grid; gap: 3px; grid-template-columns: repeat(3, 14px); }
+      .anchor-button { background: #fff; border: 1px solid #c9c9c9; border-radius: 2px; height: 14px; padding: 0; width: 14px; }
+      .anchor-button:hover { border-color: #777; }
+      .anchor-button[aria-checked="true"] { background: #242424; border-color: #242424; }
       .control { margin-top: 12px; }
       .control:first-of-type { margin-top: 0; }
       .control-top { align-items: center; display: flex; gap: 6px; justify-content: space-between; margin-bottom: 4px; }
@@ -40,6 +47,20 @@
   <body>
     <div class="preview" aria-label="斜切效果预览">
       <div id="preview-shape" class="shape"></div>
+    </div>
+    <div class="anchor-control" role="radiogroup" aria-label="斜切锚点">
+      <span class="anchor-label"><svg class="anchor-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="9" width="2" height="2" fill="#A4A4A4"/></svg>Anchor</span>
+      <div class="anchor-grid">
+        <button class="anchor-button" type="button" data-anchor="top-left" role="radio" aria-label="左上锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="top-center" role="radio" aria-label="上中锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="top-right" role="radio" aria-label="右上锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="center-left" role="radio" aria-label="左中锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="center" role="radio" aria-label="中心锚点" aria-checked="true"></button>
+        <button class="anchor-button" type="button" data-anchor="center-right" role="radio" aria-label="右中锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-left" role="radio" aria-label="左下锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-center" role="radio" aria-label="下中锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-right" role="radio" aria-label="右下锚点" aria-checked="false"></button>
+      </div>
     </div>
     <div class="control">
       <div class="control-top">
@@ -70,6 +91,19 @@
       const verticalSlider = document.getElementById("vertical-slider");
       const previewShape = document.getElementById("preview-shape");
       const status = document.getElementById("status");
+      const anchorButtons = Array.from(document.querySelectorAll(".anchor-button"));
+      const anchorOrigins = {
+        "top-left": "0% 0%",
+        "top-center": "50% 0%",
+        "top-right": "100% 0%",
+        "center-left": "0% 50%",
+        center: "50% 50%",
+        "center-right": "100% 50%",
+        "bottom-left": "0% 100%",
+        "bottom-center": "50% 100%",
+        "bottom-right": "100% 100%",
+      };
+      let anchor = "center";
 
       function clamp(value) {
         return Math.max(-60, Math.min(60, Number.isFinite(value) ? value : 0));
@@ -85,7 +119,28 @@
         const skewedHeight = shapeSize + Math.abs(Math.tan(verticalRadians)) * shapeSize;
         const previewScale = Math.min(1, availableWidth / skewedWidth, availableHeight / skewedHeight);
 
+        previewShape.style.transformOrigin = anchorOrigins[anchor];
         previewShape.style.transform = `scale(${previewScale}) skew(${horizontalSlider.value}deg, ${verticalSlider.value}deg)`;
+      }
+
+      function sendPreview() {
+        parent.postMessage({
+          pluginMessage: {
+            type: "preview-skew",
+            horizontalAngle: horizontalAngleInput.value,
+            verticalAngle: verticalAngleInput.value,
+            anchor,
+          },
+        }, "*");
+      }
+
+      function selectAnchor(nextAnchor, shouldPreview = true) {
+        anchor = nextAnchor;
+        anchorButtons.forEach((button) => {
+          button.setAttribute("aria-checked", String(button.dataset.anchor === anchor));
+        });
+        updatePreview();
+        if (shouldPreview) sendPreview();
       }
 
       function syncControls(input, slider, value, shouldPreview = true) {
@@ -94,19 +149,16 @@
         slider.value = normalizedValue;
         updatePreview();
         if (!shouldPreview) return;
-        parent.postMessage({
-          pluginMessage: {
-            type: "preview-skew",
-            horizontalAngle: horizontalAngleInput.value,
-            verticalAngle: verticalAngleInput.value,
-          },
-        }, "*");
+        sendPreview();
       }
 
       horizontalSlider.oninput = () => syncControls(horizontalAngleInput, horizontalSlider, horizontalSlider.value);
       verticalSlider.oninput = () => syncControls(verticalAngleInput, verticalSlider, verticalSlider.value);
       horizontalAngleInput.oninput = () => syncControls(horizontalAngleInput, horizontalSlider, horizontalAngleInput.value);
       verticalAngleInput.oninput = () => syncControls(verticalAngleInput, verticalSlider, verticalAngleInput.value);
+      anchorButtons.forEach((button) => {
+        button.onclick = () => selectAnchor(button.dataset.anchor);
+      });
 
       document.getElementById("apply").onclick = () => {
         parent.postMessage({
@@ -114,6 +166,7 @@
             type: "apply-skew",
             horizontalAngle: horizontalAngleInput.value,
             verticalAngle: verticalAngleInput.value,
+            anchor,
           },
         }, "*");
       };
@@ -125,6 +178,7 @@
       document.getElementById("reset").onclick = () => {
         syncControls(horizontalAngleInput, horizontalSlider, 0, false);
         syncControls(verticalAngleInput, verticalSlider, 0, false);
+        selectAnchor("center", false);
         parent.postMessage({ pluginMessage: { type: "reset" } }, "*");
       };
 

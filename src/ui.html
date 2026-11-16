@@ -34,7 +34,7 @@
       input[type="range"] { appearance: none; background: transparent; display: block; height: 12px; margin: 0; width: 100%; }
       input[type="range"]::-webkit-slider-runnable-track { background: #d5d5d9; border-radius: 999px; height: 3px; }
       input[type="range"]::-webkit-slider-thumb { appearance: none; background: #292929; border: 0; border-radius: 50%; height: 12px; margin-top: -4.5px; width: 12px; }
-      .axis-presets { display: grid; gap: 4px; grid-template-columns: repeat(4, 1fr); margin-top: 4px; }
+      .axis-presets { display: grid; gap: 4px; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 4px; }
       .axis-preset-button { background: #fff; border: 1px solid #d5d5d9; border-radius: 4px; color: #777; font-size: 9px; height: 20px; padding: 0; }
       .axis-preset-button:hover { border-color: #777; color: #242424; }
       .axis-preset-button.is-active { background: #242424; border-color: #242424; color: #fff; }
@@ -76,6 +76,8 @@
       <div class="axis-presets" aria-label="水平斜切预设">
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-45">−45°</button>
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-30">−30°</button>
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-15">−15°</button>
+        <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="15">+15°</button>
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="30">+30°</button>
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="45">+45°</button>
       </div>
@@ -90,6 +92,8 @@
       <div class="axis-presets" aria-label="垂直斜切预设">
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-45">−45°</button>
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-30">−30°</button>
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-15">−15°</button>
+        <button class="axis-preset-button" type="button" data-axis="vertical" data-value="15">+15°</button>
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="30">+30°</button>
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="45">+45°</button>
       </div>

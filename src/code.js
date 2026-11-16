@@ -1,11 +1,13 @@
 const MAX_ANGLE = 60;
-const EPSILON = 0.0001;
 
-figma.showUI(__html__, { width: 240, height: 386, title: "Skew Tool" });
+figma.showUI(__html__, { width: 240, height: 374, title: "Skew Tool" });
 
 const initialTransforms = new Map();
 const previewOrigins = new Map();
 const history = [];
+let errorNotification = null;
+let lastErrorMessage = "";
+let lastErrorTime = 0;
 const ANCHORS = {
   "top-left": { x: 0, y: 0 },
   "top-center": { x: 0.5, y: 0 },
@@ -20,18 +22,6 @@ const ANCHORS = {
 
 function isSupported(node) {
   return "relativeTransform" in node && "width" in node && "height" in node;
-}
-
-function hasOnlyRotation(transform) {
-  const xAxisLength = Math.hypot(transform[0][0], transform[1][0]);
-  const yAxisLength = Math.hypot(transform[0][1], transform[1][1]);
-  const dotProduct = transform[0][0] * transform[0][1] + transform[1][0] * transform[1][1];
-
-  return (
-    Math.abs(xAxisLength - 1) < EPSILON &&
-    Math.abs(yAxisLength - 1) < EPSILON &&
-    Math.abs(dotProduct) < EPSILON
-  );
 }
 
 function isAutoLayoutChild(node) {
@@ -104,22 +94,28 @@ function getEligibleSelection() {
     throw new Error("暂不支持 Auto Layout 容器中的直接子项。");
   }
 
-  const alreadySkewed = selected.find(
-    (node) => !initialTransforms.has(node.id) && !hasOnlyRotation(node.relativeTransform),
-  );
-  if (alreadySkewed) {
-    throw new Error("暂不支持打开插件前已斜切的图层。");
-  }
-
   return selected;
 }
 
 function postSuccess(message) {
+  clearErrorNotification();
   figma.ui.postMessage({ type: "success", message });
 }
 
+function clearErrorNotification() {
+  if (errorNotification) errorNotification.cancel();
+  errorNotification = null;
+  lastErrorMessage = "";
+  lastErrorTime = 0;
+}
+
 function postError(error) {
-  figma.ui.postMessage({ type: "error", message: error.message });
+  const now = Date.now();
+  if (error.message === lastErrorMessage && now - lastErrorTime < 2500) return;
+  clearErrorNotification();
+  errorNotification = figma.notify(error.message, { timeout: 2500 });
+  lastErrorMessage = error.message;
+  lastErrorTime = now;
 }
 
 function ensureInitialTransforms(nodes) {
@@ -132,6 +128,8 @@ function ensureInitialTransforms(nodes) {
 
 function setSkew(nodes, horizontalAngle, verticalAngle, anchor) {
   nodes.forEach((node) => {
+    // Compose with the session baseline, including any pre-existing skew.
+    // Never use the previous preview as the baseline: slider input must not accumulate.
     const initialTransform = initialTransforms.get(node.id).transform;
     node.relativeTransform = transformAroundAnchor(node, initialTransform, horizontalAngle, verticalAngle, anchor);
   });
@@ -173,42 +171,66 @@ function cancelPreview() {
 }
 
 function undoLastApply() {
-  if (previewOrigins.size > 0) {
-    cancelPreview();
-    postSuccess("已取消当前预览");
-    return;
+  const selected = figma.currentPage.selection.filter((node) => !node.removed);
+  if (selected.length === 0) {
+    throw new Error("请先选中需要撤销的图层。");
   }
 
-  const previousTransforms = history.pop();
-  if (!previousTransforms) {
-    throw new Error("没有可撤销的插件操作。");
-  }
-
-  previousTransforms.forEach(({ node, transform }) => {
-    if (!node.removed) node.relativeTransform = transform;
+  const pendingIds = new Set(selected.map((node) => node.id));
+  let restoredCount = 0;
+  selected.forEach((node) => {
+    const preview = previewOrigins.get(node.id);
+    if (!preview) return;
+    node.relativeTransform = cloneTransform(preview.transform);
+    previewOrigins.delete(node.id);
+    pendingIds.delete(node.id);
+    restoredCount += 1;
   });
+
+  // Consume only the newest entry for each selected layer. Keep all other
+  // layers and older entries available for their own subsequent undo.
+  for (let index = history.length - 1; index >= 0 && pendingIds.size > 0; index -= 1) {
+    history[index] = history[index].filter(({ node, transform }) => {
+      if (!pendingIds.has(node.id)) return true;
+      node.relativeTransform = cloneTransform(transform);
+      pendingIds.delete(node.id);
+      restoredCount += 1;
+      return false;
+    });
+    if (history[index].length === 0) history.splice(index, 1);
+  }
+
+  if (restoredCount === 0) {
+    throw new Error("选中的图层没有可撤销的插件操作。");
+  }
   figma.commitUndo();
-  postSuccess("已撤销上一步斜切");
+  postSuccess(`已撤销 ${restoredCount} 个选中图层的上一步调整`);
 }
 
 function resetSession() {
-  if (initialTransforms.size === 0) {
+  const restoredIds = new Set();
+  figma.currentPage.selection.forEach((node) => {
+    const initial = initialTransforms.get(node.id);
+    if (!initial || node.removed) return;
+    node.relativeTransform = cloneTransform(initial.transform);
+    restoredIds.add(node.id);
+    initialTransforms.delete(node.id);
+    previewOrigins.delete(node.id);
+  });
+
+  if (restoredIds.size === 0) {
     postSuccess("参数已重置");
     return;
   }
 
-  let restoredCount = 0;
-  initialTransforms.forEach(({ node, transform }) => {
-    if (!node.removed) {
-      node.relativeTransform = transform;
-      restoredCount += 1;
-    }
-  });
-  initialTransforms.clear();
-  previewOrigins.clear();
-  history.length = 0;
+  // A later undo must not reapply an old state to a layer that was reset.
+  // Preserve history entries belonging to other layers, including mixed applies.
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    history[index] = history[index].filter(({ node }) => !restoredIds.has(node.id));
+    if (history[index].length === 0) history.splice(index, 1);
+  }
   figma.commitUndo();
-  postSuccess(`已重置 ${restoredCount} 个图层`);
+  postSuccess(`已重置 ${restoredIds.size} 个图层`);
 }
 
 figma.ui.onmessage = (message) => {
@@ -232,12 +254,14 @@ figma.ui.onmessage = (message) => {
     }
     if (message.type === "undo") undoLastApply();
     if (message.type === "reset") resetSession();
+    clearErrorNotification();
   } catch (error) {
     postError(error);
   }
 };
 
 figma.on("selectionchange", () => {
+  clearErrorNotification();
   if (previewOrigins.size > 0) cancelPreview();
   figma.ui.postMessage({ type: "clear-status" });
 });

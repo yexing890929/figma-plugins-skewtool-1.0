@@ -155,22 +155,40 @@ function cancelPreview() {
 }
 
 function undoLastApply() {
-  if (previewOrigins.size > 0) {
-    cancelPreview();
-    postSuccess("已取消当前预览");
-    return;
+  const selected = figma.currentPage.selection.filter((node) => !node.removed);
+  if (selected.length === 0) {
+    throw new Error("请先选中需要撤销的图层。");
   }
 
-  const previousTransforms = history.pop();
-  if (!previousTransforms) {
-    throw new Error("没有可撤销的插件操作。");
-  }
-
-  previousTransforms.forEach(({ node, transform }) => {
-    if (!node.removed) node.relativeTransform = transform;
+  const pendingIds = new Set(selected.map((node) => node.id));
+  let restoredCount = 0;
+  selected.forEach((node) => {
+    const preview = previewOrigins.get(node.id);
+    if (!preview) return;
+    node.relativeTransform = cloneTransform(preview.transform);
+    previewOrigins.delete(node.id);
+    pendingIds.delete(node.id);
+    restoredCount += 1;
   });
+
+  // Consume only the newest entry for each selected layer. Keep all other
+  // layers and older entries available for their own subsequent undo.
+  for (let index = history.length - 1; index >= 0 && pendingIds.size > 0; index -= 1) {
+    history[index] = history[index].filter(({ node, transform }) => {
+      if (!pendingIds.has(node.id)) return true;
+      node.relativeTransform = cloneTransform(transform);
+      pendingIds.delete(node.id);
+      restoredCount += 1;
+      return false;
+    });
+    if (history[index].length === 0) history.splice(index, 1);
+  }
+
+  if (restoredCount === 0) {
+    throw new Error("选中的图层没有可撤销的插件操作。");
+  }
   figma.commitUndo();
-  postSuccess("已撤销上一步斜切");
+  postSuccess(`已撤销 ${restoredCount} 个选中图层的上一步调整`);
 }
 
 function resetSession() {

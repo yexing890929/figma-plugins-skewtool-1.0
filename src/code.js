@@ -1,5 +1,4 @@
 const MAX_ANGLE = 60;
-const EPSILON = 0.0001;
 
 figma.showUI(__html__, { width: 240, height: 432, title: "Skew Tool" });
 
@@ -20,18 +19,6 @@ const ANCHORS = {
 
 function isSupported(node) {
   return "relativeTransform" in node && "width" in node && "height" in node;
-}
-
-function hasOnlyRotation(transform) {
-  const xAxisLength = Math.hypot(transform[0][0], transform[1][0]);
-  const yAxisLength = Math.hypot(transform[0][1], transform[1][1]);
-  const dotProduct = transform[0][0] * transform[0][1] + transform[1][0] * transform[1][1];
-
-  return (
-    Math.abs(xAxisLength - 1) < EPSILON &&
-    Math.abs(yAxisLength - 1) < EPSILON &&
-    Math.abs(dotProduct) < EPSILON
-  );
 }
 
 function isAutoLayoutChild(node) {
@@ -104,13 +91,6 @@ function getEligibleSelection() {
     throw new Error("暂不支持 Auto Layout 容器中的直接子项。");
   }
 
-  const alreadySkewed = selected.find(
-    (node) => !initialTransforms.has(node.id) && !hasOnlyRotation(node.relativeTransform),
-  );
-  if (alreadySkewed) {
-    throw new Error("暂不支持打开插件前已斜切的图层。");
-  }
-
   return selected;
 }
 
@@ -132,6 +112,8 @@ function ensureInitialTransforms(nodes) {
 
 function setSkew(nodes, horizontalAngle, verticalAngle, anchor) {
   nodes.forEach((node) => {
+    // Compose with the session baseline, including any pre-existing skew.
+    // Never use the previous preview as the baseline: slider input must not accumulate.
     const initialTransform = initialTransforms.get(node.id).transform;
     node.relativeTransform = transformAroundAnchor(node, initialTransform, horizontalAngle, verticalAngle, anchor);
   });

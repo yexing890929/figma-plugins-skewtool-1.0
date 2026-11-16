@@ -174,23 +174,29 @@ function undoLastApply() {
 }
 
 function resetSession() {
-  if (initialTransforms.size === 0) {
+  const restoredIds = new Set();
+  figma.currentPage.selection.forEach((node) => {
+    const initial = initialTransforms.get(node.id);
+    if (!initial || node.removed) return;
+    node.relativeTransform = cloneTransform(initial.transform);
+    restoredIds.add(node.id);
+    initialTransforms.delete(node.id);
+    previewOrigins.delete(node.id);
+  });
+
+  if (restoredIds.size === 0) {
     postSuccess("参数已重置");
     return;
   }
 
-  let restoredCount = 0;
-  initialTransforms.forEach(({ node, transform }) => {
-    if (!node.removed) {
-      node.relativeTransform = transform;
-      restoredCount += 1;
-    }
-  });
-  initialTransforms.clear();
-  previewOrigins.clear();
-  history.length = 0;
+  // A later undo must not reapply an old state to a layer that was reset.
+  // Preserve history entries belonging to other layers, including mixed applies.
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    history[index] = history[index].filter(({ node }) => !restoredIds.has(node.id));
+    if (history[index].length === 0) history.splice(index, 1);
+  }
   figma.commitUndo();
-  postSuccess(`已重置 ${restoredCount} 个图层`);
+  postSuccess(`已重置 ${restoredIds.size} 个图层`);
 }
 
 figma.ui.onmessage = (message) => {

@@ -5,6 +5,9 @@ figma.showUI(__html__, { width: 240, height: 384, title: "Skew Tool" });
 const initialTransforms = new Map();
 const previewOrigins = new Map();
 const history = [];
+let errorNotification = null;
+let lastErrorMessage = "";
+let lastErrorTime = 0;
 const ANCHORS = {
   "top-left": { x: 0, y: 0 },
   "top-center": { x: 0.5, y: 0 },
@@ -95,11 +98,24 @@ function getEligibleSelection() {
 }
 
 function postSuccess(message) {
+  clearErrorNotification();
   figma.ui.postMessage({ type: "success", message });
 }
 
+function clearErrorNotification() {
+  if (errorNotification) errorNotification.cancel();
+  errorNotification = null;
+  lastErrorMessage = "";
+  lastErrorTime = 0;
+}
+
 function postError(error) {
-  figma.ui.postMessage({ type: "error", message: error.message });
+  const now = Date.now();
+  if (error.message === lastErrorMessage && now - lastErrorTime < 2500) return;
+  clearErrorNotification();
+  errorNotification = figma.notify(error.message, { timeout: 2500 });
+  lastErrorMessage = error.message;
+  lastErrorTime = now;
 }
 
 function ensureInitialTransforms(nodes) {
@@ -238,12 +254,14 @@ figma.ui.onmessage = (message) => {
     }
     if (message.type === "undo") undoLastApply();
     if (message.type === "reset") resetSession();
+    clearErrorNotification();
   } catch (error) {
     postError(error);
   }
 };
 
 figma.on("selectionchange", () => {
+  clearErrorNotification();
   if (previewOrigins.size > 0) cancelPreview();
   figma.ui.postMessage({ type: "clear-status" });
 });

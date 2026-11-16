@@ -51,8 +51,6 @@
       .apply { background: #18a0fb; border: 2px solid #18a0fb; color: #fff; }
       .apply:hover { background: #0d8de3; border-color: #0d8de3; }
       .undo { background: transparent; border: 0; color: #777; font-size: 10px; height: auto; margin-top: 16px; text-decoration: none; width: 100%; }
-      #status { display: none; font-size: 10px; margin: 8px 0 0; text-align: center; }
-      #status.error { color: #d92d20; display: block; }
     </style>
   </head>
   <body>
@@ -112,14 +110,12 @@
       <button id="apply" class="apply" type="button">Apply</button>
     </div>
     <button id="undo" class="undo" type="button">撤销上一步</button>
-    <div id="status" role="status"></div>
     <script>
       const horizontalAngleInput = document.getElementById("horizontal-angle");
       const verticalAngleInput = document.getElementById("vertical-angle");
       const horizontalSlider = document.getElementById("horizontal-slider");
       const verticalSlider = document.getElementById("vertical-slider");
       const previewShape = document.getElementById("preview-shape");
-      const status = document.getElementById("status");
       const anchorButtons = Array.from(document.querySelectorAll(".anchor-button"));
       const presetButtons = Array.from(document.querySelectorAll(".axis-preset-button"));
       const presetToggles = Array.from(document.querySelectorAll(".preset-toggle"));
@@ -276,12 +272,8 @@
         if (!message) return;
         if (message.type === "clear-status") {
           closePresetMenus();
-          status.textContent = "";
-          status.className = "";
           return;
         }
-        status.textContent = message.message;
-        status.className = message.type;
       };
     </script>
   </body>

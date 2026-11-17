@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +11,6 @@
       button, input { font-family: inherit; }
       button { border-radius: var(--radius); cursor: pointer; font-size: 11px; font-weight: 500; height: 34px; transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease; }
       button:focus-visible, input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-      button:active { transform: translateY(1px); }
       .preview { align-items: center; background: #f7f8fa; border: 1px solid #edf0f2; border-radius: 8px; display: flex; height: 112px; justify-content: center; overflow: hidden; position: relative; }
       .preview::before { background: #e7eaee; content: ""; height: 1px; left: 12px; position: absolute; right: 12px; top: 50%; }
       .preview::after { background: #e7eaee; bottom: 12px; content: ""; left: 50%; position: absolute; top: 12px; width: 1px; }
@@ -19,78 +18,80 @@
       .shape { align-items: center; background: transparent; border: 2px solid #4a4a4a; display: flex; height: 58px; justify-content: center; position: relative; transition: transform 120ms ease-out; width: 58px; z-index: 2; }
       .shape::before, .shape::after { background: #4a4a4a; content: ""; height: 2px; position: absolute; width: 16px; }
       .shape::after { transform: rotate(90deg); }
-      .anchor-control { align-items: center; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; margin: 0; padding: 12px 0; }
+      .anchor-control { align-items: center; display: flex; justify-content: space-between; margin: 0; padding: 12px 0; }
       .anchor-label { align-items: center; color: var(--ink); display: flex; font-size: 11px; font-weight: 500; gap: 8px; }
       .anchor-icon { display: block; height: 12px; width: 12px; }
-      .anchor-grid { display: grid; gap: 3px; grid-template-columns: repeat(3, 14px); padding: 4px; }
-      .anchor-button { background: #fff; border: 1px solid #bcc2ca; border-radius: 2px; height: 14px; padding: 0; width: 14px; }
-      .anchor-button:hover { background: #e8f2fd; border-color: var(--accent); }
+      .anchor-grid { display: grid; gap: 3px; grid-template-columns: repeat(3, 14px); padding: 4px 0 4px 4px; }
+      .anchor-button { background: #fff; border: 1px solid #cbd1d8; border-radius: 2px; height: 14px; padding: 0; width: 14px; }
+      .anchor-button:hover { background: var(--surface); border-color: #a7b0bd; }
       .anchor-button[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
       .control { margin-top: 12px; position: relative; }
+      .anchor-control + .control { margin-top: 6px; }
       .control:first-of-type { margin-top: 0; }
       .control-top { align-items: center; display: flex; gap: 4px; justify-content: space-between; margin-bottom: 4px; min-height: 26px; }
       label { color: var(--ink); font-size: 11px; font-weight: 500; white-space: nowrap; }
       .icon { display: block; height: 12px; width: 12px; }
       .control-name { align-items: center; display: flex; flex: 1; gap: 8px; min-width: 0; }
       .number { appearance: textfield; background: var(--surface); border: 0; border-bottom: 1.5px solid transparent; border-radius: 4px 0 0 4px; color: var(--ink); font: 500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; height: 26px; padding: 3px 0 3px 4px; text-align: right; width: 30px; min-width: 0; }
-      .number:focus { border-bottom: 1.5px solid #000; outline: 0; }
+      .number { width: 36px; flex-shrink: 0; padding-right: 6px; }
+      .number:focus { border-bottom-color: transparent; outline: 0; }
       .number::-webkit-inner-spin-button, .number::-webkit-outer-spin-button { appearance: none; margin: 0; }
       .degree { align-items: center; background: var(--surface); color: var(--muted); display: flex; font-size: 11px; height: 26px; margin-left: -4px; padding-left: 2px; }
       input[type="range"] { appearance: none; background: transparent; cursor: ew-resize; display: block; height: 20px; margin: 0; width: 100%; }
       input[type="range"]::-webkit-slider-runnable-track { background: #dce1e7; border-radius: 999px; height: 3px; }
       input[type="range"]::-webkit-slider-thumb { appearance: none; background: var(--ink); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #c3c9d1; height: 12px; margin-top: -4.5px; width: 12px; transition: box-shadow 140ms ease; }
-      input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 3px #0875e11a; }
+      input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 4px #24272C1a; }
       input[type="range"]::-moz-range-track { background: #dce1e7; border-radius: 999px; height: 3px; }
       input[type="range"]::-moz-range-thumb { background: var(--ink); border: 2px solid #fff; border-radius: 50%; height: 8px; width: 8px; }
       .preset-toggle { align-items: center; background: var(--surface); border: 0; border-radius: 0 4px 4px 0; color: #858c95; display: flex; flex: 0 0 18px; height: 26px; justify-content: center; margin-left: -4px; padding: 0; width: 18px; }
       .preset-toggle:hover, .preset-toggle[aria-expanded="true"] { color: #000; }
-      .preset-toggle svg { height: 12px; transition: transform 160ms ease; width: 12px; }
+      .degree span { position: relative; left: -6px; }
+      .preset-toggle svg { height: 12px; position: relative; left: -2px; transition: transform 160ms ease; width: 12px; }
       .preset-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
       .preset-toggle:focus-visible { outline: 1px solid #000; outline-offset: 2px; }
       .axis-presets { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px #1823351a, 0 2px 6px #1823350a; display: none; gap: 4px; grid-template-columns: repeat(3, 1fr); padding: 6px; position: absolute; right: 0; top: 30px; width: 100%; z-index: 10; }
       .control.is-open .axis-presets { display: grid; }
       .axis-preset-button { background: var(--surface); border: 1px solid transparent; border-radius: 4px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; height: 28px; padding: 0; }
-      .axis-preset-button:hover { background: #e8f2fd; border-color: #bdd9f8; color: var(--accent); }
+      .axis-preset-button:hover { background: #EDEFF2; }
       .axis-preset-button.is-active { background: #242424; border-color: #242424; color: #fff; }
       .actions { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 16px; }
       .reset { background: #fff; border: 1px solid #cbd1d8; color: var(--ink); }
       .reset:hover { background: var(--surface); border-color: #a7b0bd; }
       .apply { background: var(--accent); border: 1px solid var(--accent); color: #fff; }
       .apply:hover { background: #0666c6; border-color: #0666c6; }
-      .actions button:active { transform: translateY(1px); }
       .undo { background: transparent; border: 0; color: var(--muted); font-size: 10px; font-weight: 400; height: 24px; margin-top: 8px; text-decoration: none; width: 100%; }
       .undo:hover { background: var(--surface); color: var(--ink); }
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
     </style>
   </head>
   <body>
-    <div class="preview" aria-label="斜切效果预览">
+    <div class="preview" aria-label="Skew preview">
       <div class="preview-reference" aria-hidden="true"></div>
       <div id="preview-shape" class="shape"></div>
     </div>
-    <div class="anchor-control" role="radiogroup" aria-label="斜切锚点">
+    <div class="anchor-control" role="radiogroup" aria-label="Skew anchor">
       <span class="anchor-label"><svg class="anchor-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="1" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="5" y="9" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="1" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="5" width="2" height="2" fill="#A4A4A4"/><rect x="9" y="9" width="2" height="2" fill="#A4A4A4"/></svg>Anchor</span>
       <div class="anchor-grid">
-        <button class="anchor-button" type="button" data-anchor="top-left" role="radio" aria-label="左上锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="top-center" role="radio" aria-label="上中锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="top-right" role="radio" aria-label="右上锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="center-left" role="radio" aria-label="左中锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="center" role="radio" aria-label="中心锚点" aria-checked="true"></button>
-        <button class="anchor-button" type="button" data-anchor="center-right" role="radio" aria-label="右中锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="bottom-left" role="radio" aria-label="左下锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="bottom-center" role="radio" aria-label="下中锚点" aria-checked="false"></button>
-        <button class="anchor-button" type="button" data-anchor="bottom-right" role="radio" aria-label="右下锚点" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="top-left" role="radio" aria-label="Top-left anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="top-center" role="radio" aria-label="Top-center anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="top-right" role="radio" aria-label="Top-right anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="center-left" role="radio" aria-label="Center-left anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="center" role="radio" aria-label="Center anchor" aria-checked="true"></button>
+        <button class="anchor-button" type="button" data-anchor="center-right" role="radio" aria-label="Center-right anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-left" role="radio" aria-label="Bottom-left anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-center" role="radio" aria-label="Bottom-center anchor" aria-checked="false"></button>
+        <button class="anchor-button" type="button" data-anchor="bottom-right" role="radio" aria-label="Bottom-right anchor" aria-checked="false"></button>
       </div>
     </div>
     <div class="control">
       <div class="control-top">
         <div class="control-name"><svg class="icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1" y="5" width="10" height="2" fill="#A4A4A4"/><path d="M8 1H11V3H6L8 1Z" fill="#A4A4A4"/><path d="M4 11L1 11L1 9L6 9L4 11Z" fill="#A4A4A4"/></svg><label for="horizontal-angle">Horizontal Skew</label></div>
-        <input id="horizontal-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="水平斜切角度" />
-        <span class="degree">°</span>
-        <button class="preset-toggle" type="button" aria-label="水平角度预设" aria-expanded="false" aria-controls="horizontal-presets"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 3.5L6 7.5L10 3.5" stroke-width="1.5" stroke="currentColor"/></svg></button>
+        <input id="horizontal-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="Horizontal skew angle" />
+        <span class="degree"><span>°</span></span>
+        <button class="preset-toggle" type="button" aria-label="Horizontal angle presets" aria-expanded="false" aria-controls="horizontal-presets"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 3.5L6 7.5L10 3.5" stroke-width="1.5" stroke="currentColor"/></svg></button>
       </div>
-      <input id="horizontal-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="水平斜切滑杆" />
-      <div id="horizontal-presets" class="axis-presets" aria-label="水平斜切预设">
+      <input id="horizontal-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="Horizontal skew slider" />
+      <div id="horizontal-presets" class="axis-presets" aria-label="Horizontal skew presets">
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-45">−45°</button>
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-30">−30°</button>
         <button class="axis-preset-button" type="button" data-axis="horizontal" data-value="-15">−15°</button>
@@ -102,12 +103,12 @@
     <div class="control">
       <div class="control-top">
         <div class="control-name"><svg class="icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="7" y="1" width="10" height="2" transform="rotate(90 7 1)" fill="#A4A4A4"/><path d="M11 8L11 11L9 11L9 6L11 8Z" fill="#A4A4A4"/><path d="M1 4L1 1L3 1L3 6L1 4Z" fill="#A4A4A4"/></svg><label for="vertical-angle">Vertical Skew</label></div>
-        <input id="vertical-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="垂直斜切角度" />
-        <span class="degree">°</span>
-        <button class="preset-toggle" type="button" aria-label="垂直角度预设" aria-expanded="false" aria-controls="vertical-presets"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 3.5L6 7.5L10 3.5" stroke-width="1.5" stroke="currentColor"/></svg></button>
+        <input id="vertical-angle" class="number" type="number" value="0" min="-60" max="60" step="1" aria-label="Vertical skew angle" />
+        <span class="degree"><span>°</span></span>
+        <button class="preset-toggle" type="button" aria-label="Vertical angle presets" aria-expanded="false" aria-controls="vertical-presets"><svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 3.5L6 7.5L10 3.5" stroke-width="1.5" stroke="currentColor"/></svg></button>
       </div>
-      <input id="vertical-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="垂直斜切滑杆" />
-      <div id="vertical-presets" class="axis-presets" aria-label="垂直斜切预设">
+      <input id="vertical-slider" type="range" min="-60" max="60" value="0" step="1" aria-label="Vertical skew slider" />
+      <div id="vertical-presets" class="axis-presets" aria-label="Vertical skew presets">
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-45">−45°</button>
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-30">−30°</button>
         <button class="axis-preset-button" type="button" data-axis="vertical" data-value="-15">−15°</button>
@@ -120,7 +121,7 @@
       <button id="reset" class="reset" type="button">Reset</button>
       <button id="apply" class="apply" type="button">Apply</button>
     </div>
-    <button id="undo" class="undo" type="button">撤销上一步</button>
+    <button id="undo" class="undo" type="button">Undo last step</button>
     <script>
       const horizontalAngleInput = document.getElementById("horizontal-angle");
       const verticalAngleInput = document.getElementById("vertical-angle");

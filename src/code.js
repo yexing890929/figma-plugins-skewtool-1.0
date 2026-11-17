@@ -1,6 +1,6 @@
 const MAX_ANGLE = 60;
 
-figma.showUI(__html__, { width: 240, height: 374, title: "Skew Tool" });
+figma.showUI(__html__, { width: 240, height: 416, title: "Skew Tool" });
 
 const initialTransforms = new Map();
 const previewOrigins = new Map();
@@ -46,7 +46,7 @@ function transformAroundAnchor(node, transform, horizontalAngle, verticalAngle, 
   const localTransform = createSkewTransform(horizontalAngle, verticalAngle);
   const anchorPoint = ANCHORS[anchor];
   if (!anchorPoint) {
-    throw new Error("请选择有效的斜切锚点。");
+    throw new Error("Choose a valid skew anchor.");
   }
 
   const anchorX = node.width * anchorPoint.x;
@@ -81,17 +81,17 @@ function getEligibleSelection() {
   const selected = figma.currentPage.selection;
 
   if (selected.length === 0) {
-    throw new Error("请先选中一个图层。");
+    throw new Error("Select a layer first.");
   }
 
   const unsupported = selected.find((node) => !isSupported(node));
   if (unsupported) {
-    throw new Error(`暂不支持 ${unsupported.type} 图层。`);
+    throw new Error(`${unsupported.type} layers are not supported.`);
   }
 
   const autoLayoutChild = selected.find(isAutoLayoutChild);
   if (autoLayoutChild) {
-    throw new Error("暂不支持 Auto Layout 容器中的直接子项。");
+    throw new Error("Direct children of Auto Layout containers are not supported.");
   }
 
   return selected;
@@ -159,8 +159,8 @@ function applySkew(horizontalAngle, verticalAngle, anchor) {
   history.push(previousTransforms);
   nodes.forEach((node) => previewOrigins.delete(node.id));
   figma.commitUndo();
-  figma.notify(`已对 ${nodes.length} 个图层应用斜切。`);
-  postSuccess("已应用斜切");
+  figma.notify(`Skew applied to ${nodes.length} layer${nodes.length === 1 ? "" : "s"}.`);
+  postSuccess("Skew applied");
 }
 
 function cancelPreview() {
@@ -173,7 +173,7 @@ function cancelPreview() {
 function undoLastApply() {
   const selected = figma.currentPage.selection.filter((node) => !node.removed);
   if (selected.length === 0) {
-    throw new Error("请先选中需要撤销的图层。");
+    throw new Error("Select the layers you want to undo first.");
   }
 
   const pendingIds = new Set(selected.map((node) => node.id));
@@ -201,10 +201,10 @@ function undoLastApply() {
   }
 
   if (restoredCount === 0) {
-    throw new Error("选中的图层没有可撤销的插件操作。");
+    throw new Error("No plugin actions to undo for the selected layers.");
   }
   figma.commitUndo();
-  postSuccess(`已撤销 ${restoredCount} 个选中图层的上一步调整`);
+  postSuccess(`Undid the last adjustment for ${restoredCount} selected layer${restoredCount === 1 ? "" : "s"}`);
 }
 
 function resetSession() {
@@ -219,7 +219,7 @@ function resetSession() {
   });
 
   if (restoredIds.size === 0) {
-    postSuccess("参数已重置");
+    postSuccess("Values reset");
     return;
   }
 
@@ -230,7 +230,7 @@ function resetSession() {
     if (history[index].length === 0) history.splice(index, 1);
   }
   figma.commitUndo();
-  postSuccess(`已重置 ${restoredIds.size} 个图层`);
+  postSuccess(`Reset ${restoredIds.size} layer${restoredIds.size === 1 ? "" : "s"}`);
 }
 
 figma.ui.onmessage = (message) => {
@@ -246,7 +246,7 @@ figma.ui.onmessage = (message) => {
         Math.abs(horizontalAngle) > MAX_ANGLE ||
         Math.abs(verticalAngle) > MAX_ANGLE
       ) {
-        throw new Error(`请输入 ${-MAX_ANGLE}° 到 ${MAX_ANGLE}° 之间的数值。`);
+        throw new Error(`Enter a value between ${-MAX_ANGLE}° and ${MAX_ANGLE}°.`);
       }
 
       if (message.type === "preview-skew") previewSkew(horizontalAngle, verticalAngle, anchor);

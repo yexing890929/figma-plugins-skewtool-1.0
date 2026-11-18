@@ -1,4 +1,4 @@
-# Skew Tool（本地开发版）
+# Skew Now（本地开发版）
 
 这是一个 Figma 斜切插件的最小可运行版本：选择一个或多个未斜切的普通图层，选择九宫格锚点并输入水平和垂直斜切角度，然后应用。
 
@@ -7,7 +7,7 @@
 1. 打开 Figma Desktop，进入任意 Design 文件。
 2. 选择 `Plugins` → `Development` → `Import plugin from manifest…`。
 3. 选择本项目的 `manifest.json`。
-4. 选中一个矩形或 Frame，运行 `Plugins` → `Development` → `Skew Tool`。
+4. 选中一个矩形或 Frame，运行 `Plugins` → `Development` → `Skew Now`。
 
 ## 当前边界
 

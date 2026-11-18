@@ -1,6 +1,6 @@
 const MAX_ANGLE = 60;
 
-figma.showUI(__html__, { width: 240, height: 416, title: "Skew Tool" });
+figma.showUI(__html__, { width: 240, height: 416, title: "Skew Now" });
 
 const initialTransforms = new Map();
 const previewOrigins = new Map();
